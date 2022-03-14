@@ -43,7 +43,7 @@ const getPlaceByPlaceId = (req, res, next) => {
     );
   }
   res.json({ place });
-  console.log(place);
+  //console.log(place);
 };
 
 const getPlaceByUserId = (req, res, next) => {
@@ -55,26 +55,45 @@ const getPlaceByUserId = (req, res, next) => {
     );
   }
   res.json({ user });
-  console.log(user);
+  //console.log(user);
 };
 
 const createPlace = (req, res, next) => {
-    const {id, title, description, imageUrl, address, coordinates, creatorId } = req.body;
+    const {id, title, description, imageUrl, address, location, creatorId } = req.body;
+    //console.log(req.body);
     const createdPlace = {
         id: uuidv4(),
         title,
         description,
         imageUrl,
         address,
-        location: coordinates,
+        location,
         creatorId
     }
     DUMMY_PLACES.push(createdPlace);
 
     res.status(201).json(createdPlace);
+    console.log(DUMMY_PLACES);
+}
 
+const updatePlaceById = (req, res, next) => {
+    placeId = req.params.pid;
+    const {title, description } = req.body;
+
+    const updatedPlace = { ...DUMMY_PLACES.find(p => p.id === placeId) };
+    const placeIndex = DUMMY_PLACES.findIndex(p => p.id === placeId);
+
+    updatedPlace.title = title;
+    updatedPlace.description = description;
+
+    DUMMY_PLACES[placeIndex] = updatedPlace;
+
+    // console.log(updatedPlace);
+
+    res.status(200).json({place: updatedPlace});
 }
 
 exports.getPlaceByPlaceId = getPlaceByPlaceId;
 exports.getPlaceByUserId = getPlaceByUserId;
 exports.createPlace = createPlace;
+exports.updatePlaceById = updatePlaceById;

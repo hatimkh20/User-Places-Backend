@@ -1,6 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 
+const HttpError = require('./models/http-error');
+
 const placesRoute = require('./routes/places-routes');
 
 const app = express();
@@ -8,6 +10,11 @@ const app = express();
 app.use(bodyParser.json())
 
 app.use('/api/places' ,placesRoute);
+
+app.use((req, res, next) => {
+    const error = new HttpError('Could not find the requested page.', 404);
+    throw error;
+})
 
 app.use((error, req, res, next) => {
     if(res.headerSent){

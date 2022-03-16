@@ -1,4 +1,5 @@
 const { v4: uuidv4 } = require("uuid");
+const { validationResult } = require("express-validator");
 
 const HttpError = require("../models/http-error");
 
@@ -59,6 +60,12 @@ const getPlacesByUserId = (req, res, next) => {
 };
 
 const createPlace = (req, res, next) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    console.log(errors);
+    throw new HttpError("Please validate your data", 422);
+  }
   const { id, title, description, imageUrl, address, location, creatorId } =
     req.body;
   //console.log(req.body);
@@ -78,6 +85,13 @@ const createPlace = (req, res, next) => {
 };
 
 const updatePlaceById = (req, res, next) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    console.log(errors);
+    throw new HttpError("Please validate your data", 422);
+  }
+  
   placeId = req.params.pid;
   const { title, description } = req.body;
 
@@ -94,11 +108,11 @@ const updatePlaceById = (req, res, next) => {
 };
 
 const deletePlaceById = (req, res, next) => {
-    const placeId = req.params.pid;
-    DUMMY_PLACES = DUMMY_PLACES.filter(p => p.id !== placeId);
+  const placeId = req.params.pid;
+  DUMMY_PLACES = DUMMY_PLACES.filter((p) => p.id !== placeId);
 
-    res.status(200).json({message: 'Deleted'});
-}
+  res.status(200).json({ message: "Deleted" });
+};
 
 exports.getPlaceByPlaceId = getPlaceByPlaceId;
 exports.getPlacesByUserId = getPlacesByUserId;

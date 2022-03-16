@@ -1,8 +1,8 @@
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 const HttpError = require("../models/http-error");
 
-const DUMMY_PLACES = [
+let DUMMY_PLACES = [
   {
     id: "p1",
     title: "Minar-e-Pakistan",
@@ -46,54 +46,62 @@ const getPlaceByPlaceId = (req, res, next) => {
   //console.log(place);
 };
 
-const getPlaceByUserId = (req, res, next) => {
+const getPlacesByUserId = (req, res, next) => {
   const userId = req.params.uid;
-  const user = DUMMY_PLACES.find((p) => userId === p.creatorId);
-  if (!user) {
+  const place = DUMMY_PLACES.filter((p) => userId === p.creatorId);
+  if (!place || place.length === 0) {
     return next(
       new HttpError(`No place found having user id = ${userId}`, 404)
     );
   }
-  res.json({ user });
+  res.json({ place });
   //console.log(user);
 };
 
 const createPlace = (req, res, next) => {
-    const {id, title, description, imageUrl, address, location, creatorId } = req.body;
-    //console.log(req.body);
-    const createdPlace = {
-        id: uuidv4(),
-        title,
-        description,
-        imageUrl,
-        address,
-        location,
-        creatorId
-    }
-    DUMMY_PLACES.push(createdPlace);
+  const { id, title, description, imageUrl, address, location, creatorId } =
+    req.body;
+  //console.log(req.body);
+  const createdPlace = {
+    id: uuidv4(),
+    title,
+    description,
+    imageUrl,
+    address,
+    location,
+    creatorId,
+  };
+  DUMMY_PLACES.push(createdPlace);
 
-    res.status(201).json(createdPlace);
-    console.log(DUMMY_PLACES);
-}
+  res.status(201).json(createdPlace);
+  console.log(DUMMY_PLACES);
+};
 
 const updatePlaceById = (req, res, next) => {
-    placeId = req.params.pid;
-    const {title, description } = req.body;
+  placeId = req.params.pid;
+  const { title, description } = req.body;
 
-    const updatedPlace = { ...DUMMY_PLACES.find(p => p.id === placeId) };
-    const placeIndex = DUMMY_PLACES.findIndex(p => p.id === placeId);
+  const updatedPlace = { ...DUMMY_PLACES.find((p) => p.id === placeId) };
+  const placeIndex = DUMMY_PLACES.findIndex((p) => p.id === placeId);
 
-    updatedPlace.title = title;
-    updatedPlace.description = description;
+  updatedPlace.title = title;
+  updatedPlace.description = description;
 
-    DUMMY_PLACES[placeIndex] = updatedPlace;
+  DUMMY_PLACES[placeIndex] = updatedPlace;
 
-    // console.log(updatedPlace);
+  //console.log(DUMMY_PLACES);
+  res.status(200).json({ place: updatedPlace });
+};
 
-    res.status(200).json({place: updatedPlace});
+const deletePlaceById = (req, res, next) => {
+    const placeId = req.params.pid;
+    DUMMY_PLACES = DUMMY_PLACES.filter(p => p.id !== placeId);
+
+    res.status(200).json({message: 'Deleted'});
 }
 
 exports.getPlaceByPlaceId = getPlaceByPlaceId;
-exports.getPlaceByUserId = getPlaceByUserId;
+exports.getPlacesByUserId = getPlacesByUserId;
 exports.createPlace = createPlace;
 exports.updatePlaceById = updatePlaceById;
+exports.deletePlaceById = deletePlaceById;

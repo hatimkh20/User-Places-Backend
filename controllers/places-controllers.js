@@ -114,7 +114,7 @@ const createPlace = async (req, res, next) => {
   res.status(201).json({ place: createdPlace });
 };
 
-const updatePlaceById = (req, res, next) => {
+const updatePlaceById = async (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -125,24 +125,52 @@ const updatePlaceById = (req, res, next) => {
   placeId = req.params.pid;
   const { title, description } = req.body;
 
-  const updatedPlace = { ...DUMMY_PLACES.find((p) => p.id === placeId) };
-  const placeIndex = DUMMY_PLACES.findIndex((p) => p.id === placeId);
+  let updatedPlace;
 
-  updatedPlace.title = title;
-  updatedPlace.description = description;
+  try {
+    updatedPlace = await Place.findByIdAndUpdate(placeId, {
+      title: title,
+      description: description,
+    }).exec();
+  } catch (err) {
+    console.log(err);
+    const error = new HttpError(
+      "Updating place failed, please try again.",
+      500
+    );
+    return next(error);
+  }
 
-  DUMMY_PLACES[placeIndex] = updatedPlace;
-
-  //console.log(DUMMY_PLACES);
   res.status(200).json({ place: updatedPlace });
 };
 
-const deletePlaceById = (req, res, next) => {
+const deletePlaceById = async (req, res, next) => {
   const placeId = req.params.pid;
-  if (!DUMMY_PLACES.find((p) => p.id === placeId)) {
-    throw new HttpError("No place found to be deleted.", 422);
+  let place;
+  try {
+    place = await Place.findById(placeId);
+  } catch (err) {
+    console.log(err);
+    const error = new HttpError(
+      "Deleting place failed, please try again.",
+      500
+    );
+    return next(error);
   }
-  DUMMY_PLACES = DUMMY_PLACES.filter((p) => p.id !== placeId);
+  if (!place) {
+    return next(new HttpError("No place found to be deleted.", 422));
+  }
+
+  try {
+    await Place.findByIdAndDelete(placeId);
+  } catch (err) {
+    console.log(err);
+    const error = new HttpError(
+      "Deleting place failed, please try again.",
+      500
+    );
+    return next(error);
+  }
 
   res.status(200).json({ message: "Deleted" });
 };

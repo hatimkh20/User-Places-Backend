@@ -4,23 +4,16 @@ const { validationResult } = require("express-validator");
 const HttpError = require("../models/http-error");
 const User = require("../models/user");
 
-// let DUMMY_USERS = [
-//   {
-//     id: "u1",
-//     name: "User One",
-//     email: "user1@test.com",
-//     password: "test",
-//   },
-//   {
-//     id: "u2",
-//     name: "User Two",
-//     email: "user2@test.com",
-//     password: "test2",
-//   },
-// ];
+const getUsers = async (req, res, next) => {
+  let users;
+  try {
+    users = await User.find({}, "-password");
+  } catch (err) {
+    console.log(err);
+    return next(new HttpError("Getting users failed."));
+  }
 
-const getUsers = (req, res, next) => {
-  res.json({ users: DUMMY_USERS });
+  res.json({ users: users.map(user => user.toObject( { getters: true } )) });
 };
 
 const signup = async (req, res, next) => {
@@ -30,7 +23,7 @@ const signup = async (req, res, next) => {
     console.log(errors);
     return next(new HttpError("Please validate your data", 422));
   }
-  const { name, email, password, places } = req.body;
+  const { name, email, password } = req.body;
 
   let existingUser;
 
@@ -51,7 +44,7 @@ const signup = async (req, res, next) => {
     password,
     image:
       "https://www.kindpng.com/picc/m/78-786207_user-avatar-png-user-avatar-icon-png-transparent.png",
-    places,
+    places: []
   });
 
   try {

@@ -5,38 +5,7 @@ const mongoose = require("mongoose");
 const HttpError = require("../models/http-error");
 const getCoordsForAddress = require("../util/location");
 const Place = require("../models/place");
-
-let DUMMY_PLACES = [
-  {
-    id: "p1",
-    title: "Minar-e-Pakistan",
-    description:
-      "Minar-e-Pakistan is a national monument located in Lahore, Pakistan. The tower was built between 1960 and 1968 on the site where the All-India Muslim League passed the Lahore Resolution on 23 March 1940",
-    imageUrl:
-      "https://media-cdn.tripadvisor.com/media/photo-s/19/dd/fb/84/menar-e-pakistan.jpg",
-    address:
-      "Minar-e-Pakistan, Circular Rd, Walled City of Lahore, Lahore, Punjab 54000, Pakistan",
-    location: {
-      lat: 31.5925194,
-      lng: 74.3072963,
-    },
-    creatorId: "u1",
-  },
-  {
-    id: "p2",
-    title: "Quaid-e-Azam Mazar",
-    description:
-      "Quaid-e-Azam Mazar is a national monument located in Lahore, Pakistan. The tower was built between 1960 and 1968 on the site where the All-India Muslim League passed the Lahore Resolution on 23 March 1940",
-    imageUrl:
-      "https://media-cdn.tripadvisor.com/media/photo-s/19/dd/fb/84/menar-e-pakistan.jpg",
-    address: "Quaid-e-Azam Mazar, Karachi, Pakistan",
-    location: {
-      lat: 31.5925194,
-      lng: 74.3072963,
-    },
-    creatorId: "u2",
-  },
-];
+const User = require("../models/user");
 
 const getPlaceByPlaceId = async (req, res, next) => {
   const placeId = req.params.pid;
@@ -83,7 +52,7 @@ const createPlace = async (req, res, next) => {
     console.log(errors);
     next(new HttpError("Please validate your data", 422));
   }
-  const { id, title, description, imageUrl, address, creatorId } = req.body;
+  const { id, title, description, address, creatorId } = req.body;
 
   let coordinates;
   try {
@@ -95,19 +64,46 @@ const createPlace = async (req, res, next) => {
   const createdPlace = new Place({
     title,
     description,
-    image: imageUrl,
+    image: 'https://img.traveltriangle.com/blog/wp-content/uploads/2020/03/shutterstock_1293922393.jpg',
     address,
     location: coordinates,
     creator: creatorId,
   });
 
-  try {
-    await createdPlace.save();
-  } catch (err) {
+  let user;
+
+  try{
+    user = await User.findById(creatorId);
+  }
+  catch (err) {
     console.log(err);
     const error = new HttpError(
       "Creating place failed, please try again.",
       500
+    );
+    return next(error);
+  }
+
+  if (!user) {
+    const error = new HttpError(
+      "Could not find user for provided id",
+      500
+    );
+    return next(error);
+  }
+
+  try {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    await createdPlace.save({ session });
+    user.places.push(createdPlace);
+    await user.save({ session });
+    session.commitTransaction();
+  } catch (err) {
+    console.log(err);
+    const error = new HttpError(
+      "Creating place failed, please try again.",
+      404
     );
     return next(error);
   }

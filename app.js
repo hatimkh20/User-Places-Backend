@@ -12,6 +12,16 @@ const app = express();
 
 app.use(bodyParser.json());
 
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE");
+  next();
+});
+
 app.use("/api/places", placesRoute);
 app.use("/api/users", usersRoute);
 
@@ -30,11 +40,11 @@ app.use((error, req, res, next) => {
 
 mongoose
   .connect(
-    "mongodb+srv://hatimkh20:MAo17ZeQu41vpGF1@cluster0.xyatr.mongodb.net/places?retryWrites=true&w=majority"
+    "mongodb+srv://hatimkh20:MAo17ZeQu41vpGF1@cluster0.xyatr.mongodb.net/mern-places?retryWrites=true&w=majority"
   )
   .then(() => {
     app.listen(5000);
   })
   .catch((err) => {
-      console.log(err);
+    console.log(err);
   });

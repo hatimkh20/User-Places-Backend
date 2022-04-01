@@ -64,7 +64,8 @@ const createPlace = async (req, res, next) => {
   const createdPlace = new Place({
     title,
     description,
-    image: 'https://img.traveltriangle.com/blog/wp-content/uploads/2020/03/shutterstock_1293922393.jpg',
+    image:
+      "https://img.traveltriangle.com/blog/wp-content/uploads/2020/03/shutterstock_1293922393.jpg",
     address,
     location: coordinates,
     creator: creatorId,
@@ -72,10 +73,9 @@ const createPlace = async (req, res, next) => {
 
   let user;
 
-  try{
+  try {
     user = await User.findById(creatorId);
-  }
-  catch (err) {
+  } catch (err) {
     console.log(err);
     const error = new HttpError(
       "Creating place failed, please try again.",
@@ -85,10 +85,7 @@ const createPlace = async (req, res, next) => {
   }
 
   if (!user) {
-    const error = new HttpError(
-      "Could not find user for provided id",
-      500
-    );
+    const error = new HttpError("Could not find user for provided id", 500);
     return next(error);
   }
 
@@ -144,7 +141,8 @@ const deletePlaceById = async (req, res, next) => {
   const placeId = req.params.pid;
   let place;
   try {
-    place = await Place.findById(placeId);
+    place = await Place.findById(placeId).populate("creator");
+    console.log(place);
   } catch (err) {
     console.log(err);
     const error = new HttpError(
@@ -158,11 +156,16 @@ const deletePlaceById = async (req, res, next) => {
   }
 
   try {
-    await Place.findByIdAndDelete(placeId);
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    await place.remove({ session });
+    place.creator.places.pull(place);
+    await place.creator.save({ session });
+    await session.commitTransaction();
   } catch (err) {
     console.log(err);
     const error = new HttpError(
-      "Deleting place failed, please try again.",
+      "Deleting place failed, please try again..",
       500
     );
     return next(error);

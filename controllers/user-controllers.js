@@ -31,7 +31,7 @@ const signup = async (req, res, next) => {
     existingUser = await User.findOne({ email: email });
   } catch (err) {
     console.log(err);
-    return next(new HttpError("Signing up failed. Please try agin."));
+    return next(new HttpError("Signing up failed. Please try agin.", 500));
   }
 
   if (existingUser) {

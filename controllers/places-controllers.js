@@ -52,7 +52,7 @@ const createPlace = async (req, res, next) => {
     console.log(errors);
     next(new HttpError("Please validate your data", 422));
   }
-  const { id, title, description, address, creatorId } = req.body;
+  const { title, description, address, creator } = req.body;
 
   let coordinates;
   try {
@@ -68,13 +68,13 @@ const createPlace = async (req, res, next) => {
       "https://img.traveltriangle.com/blog/wp-content/uploads/2020/03/shutterstock_1293922393.jpg",
     address,
     location: coordinates,
-    creator: creatorId,
+    creator: creator,
   });
 
   let user;
 
   try {
-    user = await User.findById(creatorId);
+    user = await User.findById(creator);
   } catch (err) {
     console.log(err);
     const error = new HttpError(
@@ -85,22 +85,24 @@ const createPlace = async (req, res, next) => {
   }
 
   if (!user) {
-    const error = new HttpError("Could not find user for provided id", 500);
+    const error = new HttpError("Could not find user for provided id", 404);
     return next(error);
   }
+
+  console.log(user)
 
   try {
     const session = await mongoose.startSession();
     session.startTransaction();
-    await createdPlace.save({ session });
+    await createdPlace.save({ session, validateModifiedOnly:true });
     user.places.push(createdPlace);
-    await user.save({ session });
+    await user.save({ session, validateModifiedOnly: true } );
     session.commitTransaction();
   } catch (err) {
     console.log(err);
     const error = new HttpError(
       "Creating place failed, please try again.",
-      404
+      500
     );
     return next(error);
   }

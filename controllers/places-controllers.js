@@ -162,7 +162,7 @@ const deletePlaceById = async (req, res, next) => {
     session.startTransaction();
     await place.remove({ session });
     place.creator.places.pull(place);
-    await place.creator.save({ session });
+    await place.creator.save({ session, validateModifiedOnly: true });
     await session.commitTransaction();
   } catch (err) {
     console.log(err);

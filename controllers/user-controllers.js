@@ -42,8 +42,7 @@ const signup = async (req, res, next) => {
     name,
     email,
     password,
-    image:
-      "https://www.kindpng.com/picc/m/78-786207_user-avatar-png-user-avatar-icon-png-transparent.png",
+    image: req.file.path,
     places: []
   });
 

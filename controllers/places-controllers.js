@@ -64,8 +64,7 @@ const createPlace = async (req, res, next) => {
   const createdPlace = new Place({
     title,
     description,
-    image:
-      "https://img.traveltriangle.com/blog/wp-content/uploads/2020/03/shutterstock_1293922393.jpg",
+    image: req.file.path,
     address,
     location: coordinates,
     creator: creator,

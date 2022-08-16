@@ -117,18 +117,33 @@ const updatePlaceById = async (req, res, next) => {
     throw new HttpError("Please validate your data", 422);
   }
 
-  placeId = req.params.pid;
+  const placeId = req.params.pid;
   const { title, description } = req.body;
 
-  let updatedPlace;
+  let place;
+  try {
+    place = await Place.findById(placeId);
+  } catch (err) {
+    const error = new HttpError(
+      "Updating place failed, please try again.",
+      500
+    );
+    return next(error);
+  }
+  if (place.creator.toString() !== req.userData.userId) {
+    const error = new HttpError(
+      "Not allowed to edit this place.",
+      500
+    );
+    return next(error);
+  }
+
+  place.title = title;
+  place.description = description;
 
   try {
-    updatedPlace = await Place.findByIdAndUpdate(placeId, {
-      title: title,
-      description: description,
-    }).exec();
+    await place.save()
   } catch (err) {
-    console.log(err);
     const error = new HttpError(
       "Updating place failed, please try again.",
       500
@@ -136,7 +151,7 @@ const updatePlaceById = async (req, res, next) => {
     return next(error);
   }
 
-  res.status(200).json({ place: updatedPlace });
+  res.status(200).json({ place: place.toObject({ getters: true }) });
 };
 
 const deletePlaceById = async (req, res, next) => {
@@ -144,7 +159,6 @@ const deletePlaceById = async (req, res, next) => {
   let place;
   try {
     place = await Place.findById(placeId).populate("creator");
-    console.log(place);
   } catch (err) {
     console.log(err);
     const error = new HttpError(
@@ -153,12 +167,20 @@ const deletePlaceById = async (req, res, next) => {
     );
     return next(error);
   }
+  
   if (!place) {
     return next(new HttpError("No place found to be deleted.", 422));
   }
 
   const imagePath = place.image;
 
+  if (place.creator.id !== req.userData.userId) {
+    const error = new HttpError(
+      "Not allowed to edit this place.",
+      500
+    );
+    return next(error);
+  }
   try {
     const session = await mongoose.startSession();
     session.startTransaction();

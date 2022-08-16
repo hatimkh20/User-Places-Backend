@@ -93,7 +93,7 @@ const login = async (req, res, next) => {
   }
   if (!user) {
     return next(
-      new HttpError("No user found having provided email and password.", 401)
+      new HttpError("No user found having provided email and password.", 403)
     );
   }
 
@@ -107,7 +107,7 @@ const login = async (req, res, next) => {
 
   if (!isValidPassword) {
     return next(
-      new HttpError("No user found having provided email and password.", 401)
+      new HttpError("No user found having provided email and password.", 403)
     );
   }
 

@@ -53,7 +53,7 @@ const createPlace = async (req, res, next) => {
     console.log(errors);
     next(new HttpError("Please validate your data", 422));
   }
-  const { title, description, address, creator } = req.body;
+  const { title, description, address } = req.body;
 
   let coordinates;
   try {
@@ -68,13 +68,13 @@ const createPlace = async (req, res, next) => {
     image: req.file.path,
     address,
     location: coordinates,
-    creator: creator,
+    creator: req.userData.userId,
   });
 
   let user;
 
   try {
-    user = await User.findById(creator);
+    user = await User.findById(req.userData.userId);
   } catch (err) {
     console.log(err);
     const error = new HttpError(

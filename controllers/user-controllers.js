@@ -69,7 +69,7 @@ const signup = async (req, res, next) => {
         userId: createdUser.id,
         email: createdUser.email,
       },
-      "dfs9l_h5wrl3L3g24s6asf",
+      process.env.JWT_KEY,
       { expiresIn: "1h" }
     );
   } catch (err) {
@@ -118,7 +118,7 @@ const login = async (req, res, next) => {
         userId: user.id,
         email: user.email,
       },
-      "dfs9l_h5wrl3L3g24s6asf",
+      process.env.JWT_KEY,
       { expiresIn: "1h" }
     );
   } catch (err) {
